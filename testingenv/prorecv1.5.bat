@@ -1,6 +1,7 @@
 @echo off
-    REM ffmpeg batch program for prores, xvid, and h264 encoding for entire prerec folders/indivdual rec files
-    
+    REM ffmpeg batch program for prores, xvid, and h264 encoding for entire prerec folders/indivdual rec files w/basic ui
+    REM currently WIP
+
     REM C# WPF overrated. batch vscript on top
     REM expect full ui in windowsforms or UWP when I get time to learn it
 

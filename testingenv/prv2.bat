@@ -1,4 +1,7 @@
 @echo off
+
+    REM prerecv 2. (just the basic code down for v2 version, subject to change)
+
 setlocal enabledelayedexpansion
 pushd %~dp0
 

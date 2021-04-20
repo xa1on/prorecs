@@ -1,4 +1,4 @@
-    REM simple script for deleting all converted files
+    REM simple script for deleting all v1 converted files
 @echo off
 setlocal enabledelayedexpansion
 pushd %~dp0
