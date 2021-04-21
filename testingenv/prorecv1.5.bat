@@ -9,23 +9,21 @@ setlocal enabledelayedexpansion
 pushd %~dp0
 goto start
 
+:init
+
+
 :start
 
-echo. & echo filetype: 
-call :confirm "Are you converting a folder? Select No if you just want to convert a single file." "Confirm"
-if %responseconfirm% == 1 ( echo folder & echo. & goto folderconvert)
-
-echo file & echo.
-goto singlefile
 
 :singlefile
-call :msgbox "Press OK then drag your file into command prompt and press enter"
-set /p path = Drag file here: 
-cd %~dp0
-echo file path: %cd%
+
+
+goto end
 
 :folderconvert
-call :folderselect
+
+
+goto end
 
 :end
 echo Done.
