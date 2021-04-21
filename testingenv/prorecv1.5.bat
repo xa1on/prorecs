@@ -2,15 +2,27 @@
     REM ffmpeg batch program for prores, xvid, and h264 encoding for entire prerec folders/indivdual rec files w/basic ui
     REM currently WIP
 
-    REM C# WPF overrated. batch vscript on top
-    REM expect full ui in windowsforms or UWP when I get time to learn it
+    REM Been experiementing with windowsforms and UWP so expect full ui when I get time to work on it (something like avifrate or vdub not sure)
+
+    REM second time doing anything in batch so bear with me.
+    REM message me on discord if you have any questions: something#7597
+
 
 setlocal enabledelayedexpansion
 pushd %~dp0
 goto start
 
 :init
+if [%1]==[] (
+    set isDragged = 0
+    set inputbatchpath = %~dp0
+) else (
+    set isDragged = 1
+    set inputbatchpath = %1
 
+)
+
+:end
 
 :start
 
@@ -82,7 +94,7 @@ exit /b
 
     REM --------------------------FFMPEG CONFIG--------------------------
 
-    REM apart from the h264 config, this is pretty much the same as gmzorz's prorec config
+    REM apart from the h264 config, this is pretty much the same as gmzorz's prorec config (may add more in the future)
 :convertsettings
 set "xvid=ffmpeg -r ^"!fps!^" -i ^"!file!^" -c:v mpeg4 -vtag xvid -qscale:v 1 -qscale:a 1 -g 32 -vsync 1 -y ^"converted_!format!^"/^"!name!^".avi"
 	REM for fast editing during hcs or editing contests (slower playback speed+worse quality but really speedy encode time)
