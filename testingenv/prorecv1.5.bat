@@ -9,23 +9,25 @@
 
 
 setlocal enabledelayedexpansion
-pushd %~dp0
 goto start
 
 :init
 if [%1]==[] (
     set isDragged = 0
     set inputbatchpath = %~dp0
+    pushd %~dp0
 ) else (
     set isDragged = 1
     set inputbatchpath = %1
-
+    pushd %~dp1
 )
-
-:end
+goto start
 
 :start
 
+echo cd: !cd!
+echo inputbatchpath: !inputbatchpath!
+echo isDragged: !isDragged!
 
 :singlefile
 
