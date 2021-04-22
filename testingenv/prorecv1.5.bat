@@ -13,10 +13,10 @@
        REM vvvvv scroll to the bottom if you want to edit the ffmpeg config vvvvv
 
           REM program env variables
-set foldername="encoded_"
-    REM L set this to whatever you want as the prefix for the created folder. default - "encoded_" 
+set foldername="e_"
+    REM L set this to whatever you want as the prefix for the created folder/file. default - "encoded_" 
 set createcopy=0
-    REM L creates copy of the folder/folders rather than creating a folder within selected folders for encoded files. (1=on 0=off) default - 0
+    REM L creates encoded copy of the files/folders rather than creating a folder within selected folders for encoded files. basically 0 for old prorec folder being created or 1 for copy of folder/file (1=on 0=off) default - 1
 set dontconfirm=0
     REM L Confirm dialog toggle. (1=on 0=off) default - 0
 set tempfiledir="%tmp%\"
@@ -31,12 +31,10 @@ setlocal enabledelayedexpansion
 goto init
 
 :init
-echo -----------ffmpeg feed----------- & echo.
 if [%1]==[] (
     set isDragged=0
     pushd %~dp0
 ) else (
-    echo %~1
     set isDragged=1
     if exist "%~1\*" (
        pushd %~1
@@ -53,9 +51,10 @@ set responseconfirm=1
 if %dontconfirm%==0 call :confirm "Single file encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Single File - prorecv1.5"
 if !responseconfirm!==0 ( exit)
 call :askinfo
-if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
 set file=%~n1%~x1
 set name=%~n1
+if !createcopy!==1 ( set inputdirectory=!file! & set "outputdirectory=!foldername!!format!_!name!") else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
+set inputdirectory=!file! & set "outputdirectory=!foldername!!format!\!name!" )
 call :encodesettings
 !%format%!
 goto end
@@ -64,6 +63,11 @@ goto end
 set responseconfirm=1
 if %dontconfirm%==0 call :confirm "Batch Folder encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Batch Folder - prorecv1.5"
 if !responseconfirm!==0 ( call :msgbox "Make sure to move/remove all folders within the target folder if you only want to encode the target folder files." & exit)
+set allfolders=
+for /f "delims=" %%D in ('dir /a:d /b') do ( set "allfolders=!allfolders! %%~nxD")
+echo !allfolders!
+call :selectionlist "!allfolders!"
+
 
 goto end
 
@@ -72,6 +76,7 @@ set responseconfirm=1
 if %dontconfirm%==0 call :confirm "Single directory encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Single Directory - prorecv1.5"
 if !responseconfirm!==0 ( exit)
 call :askinfo
+set filename=%cd%~1
 call :encodedirectory
 
 goto end
@@ -125,7 +130,7 @@ set folderSelector="(new-object -COM 'Shell.Application').BrowseForFolder(0, '%~
 for /f "usebackq delims=" %%i in (`powershell %folderSelector%`) do set "selectedfolder=%%i"
 exit /b
 
-    REM selection list for selecting items using wscript and a handful of other stuff. usage - call :selectionlist "[option1]" "[option2]" "[option3]" ...
+    REM selection list for selecting items using wscript and a handful of other stuff. usage - call :selectionlist "[option1] [option2] [option3] ..."
 :selectionlist
 set /a i=0
 findstr /e "'VBS" "%~f0">!tempfiledir!tmp.vbs & for /f "delims=" %%n in ('cscript //nologo !tempfiledir!tmp.vbs %~1') do ( set /a i+=1 & set param!i!=%%n) & set /a i=0
@@ -139,13 +144,15 @@ exit /b
 
     REM used to create encoded folder and to create encoded files within same directory (basically gmzorz thing). usage - call :encodedirectory
 :encodedirectory
-for %%a in (*.mp4, *.avi, *.wmv, *.mov, *.m4v) do(
+for %%a in (*.mp4, *.avi, *.wmv, *.mov, *.m4v) do (
     set file=%%a
     set name=%%~na
+    echo !file!
+    echo !name!
+    if !createcopy!==1 ( echo trash) else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
+    set inputdirectory=!file! & set "outputdirectory=!foldername!!format!\!name!" )
     call :encodesettings
-    if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
     !%format%!
-    pause
 )
 exit /b
 
@@ -468,11 +475,11 @@ End Class 'VBS
 
     REM apart from the h264 config, this is pretty much the same as gmzorz's prorec config (may add more in the future)
 :encodesettings
-set "xvid=ffmpeg -r ^"!fps!^" -i ^"!file!^" -c:v mpeg4 -vtag xvid -qscale:v 1 -qscale:a 1 -g 32 -vsync 1 -y ^"!foldername!!format!^"/^"!name!^".avi"
+set "xvid=ffmpeg -r ^"!fps!^" -i ^"!inputdirectory!^" -c:v mpeg4 -vtag xvid -qscale:v 1 -qscale:a 1 -g 32 -vsync 1 -y ^"!outputdirectory!^".avi"
     REM for fast editing during hcs or editing contests (slower playback speed+worse quality but really speedy encode time)
-set "prores=ffmpeg -r ^"!fps!^" -i ^"!file!^" -c:v prores_ks -profile:v 3 -c:a pcm_s16le -y ^"!foldername!!format!^"/^"!name!^".mov"
+set "prores=ffmpeg -r ^"!fps!^" -i ^"!inputdirectory!^" -c:v prores_ks -profile:v 3 -c:a pcm_s16le -y ^"!outputdirectory!^".mov"
     REM general use codec for regular prerecs or cinematics (better playback speed+quality but 10x slower encode time)
-set "h264=ffmpeg -r ^"!fps!^" -i ^"!file!^" -c:v libx264 -crf 4 -y ^"!foldername!!format!^"/^"!name!^".mp4"
+set "h264=ffmpeg -r ^"!fps!^" -i ^"!inputdirectory!^" -c:v libx264 -crf 4 -y ^"!outputdirectory!^".mp4"
     REM good for creating prerecs but vegas incompatible (relatively small file size) im pretty sure you can vdub these
 exit /b
 
