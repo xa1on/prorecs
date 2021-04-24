@@ -63,11 +63,26 @@ goto end
 set responseconfirm=1
 if %dontconfirm%==0 call :confirm "Batch Folder encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Batch Folder - prorecv1.5"
 if !responseconfirm!==0 ( call :msgbox "Make sure to move/remove all folders within the target folder if you only want to encode the target folder files." & exit)
-set allfolders=
-for /f "delims=" %%D in ('dir /a:d /b') do ( set "allfolders=!allfolders! %%~nxD")
-echo !allfolders!
-call :selectionlist "!allfolders!"
-
+set allfolders = 
+for /f "delims=" %%D in ('dir /a:d /b') do (
+    set "allfolders=!allfolders! ^"%%~nxD^""
+)
+call :selectionlist !allfolders!
+if !param1!==null ( exit)
+for /f "delims=" %%D in ('dir /a:d /b') do (
+    set /a i=0
+    :checkexcludebatch
+    set /a i+=1
+    if not defined param%i% ( goto exitexcludebatch )
+    if !param1!=="ENCODE ALL" goto finishexludebatch
+    if !param%i%!==%%~nxD goto exitexcludebatch
+    :finishexludebatch
+    pushd %cd%\%%~nxD
+    call :encodedirectory
+    popd
+    :exitexcludebatch
+    
+)
 
 goto end
 
@@ -78,7 +93,6 @@ if !responseconfirm!==0 ( exit)
 call :askinfo
 set filename=%cd%~1
 call :encodedirectory
-
 goto end
 
 :empty
@@ -132,14 +146,17 @@ exit /b
 
     REM selection list for selecting items using wscript and a handful of other stuff. usage - call :selectionlist "[option1] [option2] [option3] ..."
 :selectionlist
+set allselectargs =
+:checkselectionargs
+if [%1]==[] goto endselectionargs
+set "allselectargs=!allselectargs! %1"
+shift /1
+goto checkselectionargs
+:endselectionargs
 set /a i=0
-findstr /e "'VBS" "%~f0">!tempfiledir!tmp.vbs & for /f "delims=" %%n in ('cscript //nologo !tempfiledir!tmp.vbs %~1') do ( set /a i+=1 & set param!i!=%%n) & set /a i=0
-:results
-set /a i+=1
-if [!param%i%!]==[] goto selectionend
+findstr /e "'VBS" "%~f0">!tempfiledir!tmp.vbs & for /f "delims=" %%n in ('cscript //nologo !tempfiledir!tmp.vbs "ENCODE ALL"!allselectargs!') do ( set /a i+=1 & set param!i!=%%n)
 del !tempfiledir!tmp.vbs
-goto results
-:selectionend
+if !param1!==null ( call :msgbox "Cancelled")
 exit /b
 
     REM used to create encoded folder and to create encoded files within same directory (basically gmzorz thing). usage - call :encodedirectory
@@ -179,7 +196,7 @@ Next 'VBS
 With New clsSmallWrapperForm 'VBS
     ' Setup window 'VBS
     .ShowInTaskbar = "yes" 'VBS
-    .Title = "Select Folders - prorecv1.5" 'VBS
+    .Title = "Select Folders to Exclude - prorecv1.5" 'VBS
     .BackgroundImage = BGI 'VBS
     .Width = 354 'VBS
     .Height = 118 'VBS
@@ -229,7 +246,7 @@ With New clsSmallWrapperForm 'VBS
         .style.top = "98px" 'VBS
         .style.width = "350px" 'VBS
     End With 'VBS
-    .AddText "Choose items" 'VBS
+    .AddText "Choose excluded folders or select 'ENCODE ALL'." 'VBS
     .AppendTo "Form" 'VBS
     ' Show window 'VBS
     .Visible = True 'VBS
@@ -242,8 +259,8 @@ With New clsSmallWrapperForm 'VBS
         MsgBox "Selected " & (UBound(.Handlers.SelectedItems) + 1) & " Item(s)" & vbCrLf & Join(.Handlers.SelectedItems, vbCrLf)
         wscript.echo vbCrLf&Join(.Handlers.SelectedItems, vbCrLf) 'VBS
     Else 'VBS
-        MsgBox "Window closed"
-        wscript.echo 'VBS
+        MsgBox "Cancelled"
+        wscript.echo "null" 'VBS
     End If 'VBS
     ' The rest part of code ... 'VBS
  'VBS
