@@ -21,8 +21,6 @@ set noUI=1
 
 set foldername="e_"
     REM L set this to whatever you want as the prefix for the created folder/file. default - "encoded_" 
-set createcopy=0
-    REM L creates encoded copy of the files/folders rather than creating a folder within selected folders for encoded files. basically 0 for old prorec folder being created or 1 for copy of folder/file (1=on 0=off) default - 1
 set dontconfirm=0
     REM L Confirm encode type dialog toggle. (1=on 0=off) default - 0
 set alwaysencodeall=0
@@ -48,6 +46,7 @@ goto init
 
 :init
 echo.
+set createcopy=0
 if !noUI!==1 ( set dontconfirm=1
 set alwaysencodeall=1
 set dontaskinputs=1)
