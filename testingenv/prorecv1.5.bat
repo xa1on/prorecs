@@ -17,20 +17,36 @@ set foldername="e_"
     REM L set this to whatever you want as the prefix for the created folder/file. default - "encoded_" 
 set createcopy=0
     REM L creates encoded copy of the files/folders rather than creating a folder within selected folders for encoded files. basically 0 for old prorec folder being created or 1 for copy of folder/file (1=on 0=off) default - 1
+set noUI=1
+    REM L does things automatically without any dialog, only relying on default values below. This bypasses values set for dontconfirm, alwaysencodeall, and dontaskinput when set to 1. (1=on 0=off) default - 0
 set dontconfirm=0
-    REM L Confirm dialog toggle. (1=on 0=off) default - 0
+    REM L Confirm encode type dialog toggle. (1=on 0=off) default - 0
+set alwaysencodeall=0
+    REM L Select exclude file/folder dialog toggle and encodes all. (1=on 0=off) default - 0
+set dontaskinputs=0
+    REM L Asking for fps and codec toggle. (1=on, 0=off) default - 0
+
+    REM DEFAULT FPS AND DEFAULT CODEC ONLY TAKES EFFECT WHEN dontaskinputs OR noUI IS ON.
+       REM In order to switch default codec and fps when dontaskinputs is on, go to line # and change the third parameter
+set defaultfps=600
+set defaultcodec=xvid
+    REM self explainitory, read above comment.
+
 set tempfiledir="%tmp%\"
     REM L this is where the program puts the temp vbs files. Don't edit this if the program works as intended with its default value "%tmp%\"
+       
 
-       REM to switch default codec and fps, go to line # and change the third parameter
-
-          REM vvvv code vvvv
+          REM vvvv code(please dont mess with this if you have no idea what you're doing) vvvv
 
 
 setlocal enabledelayedexpansion
 goto init
 
 :init
+echo.
+if !noUI!==1 ( set dontconfirm=1
+set alwaysencodeall=1
+set dontaskinputs=1)
 if [%1]==[] (
     set isDragged=0
     pushd %~dp0
@@ -66,25 +82,28 @@ if !responseconfirm!==0 ( call :msgbox "Make sure to move/remove all folders wit
 set allfolders = 
 for /f "delims=" %%D in ('dir /a:d /b') do (
     set "allfolders=!allfolders! ^"%%~nxD^""
+    set /a i+=1
+    set currentfolder!i!=%%~nxD
 )
 call :selectionlist !allfolders!
-if !param1!==null ( exit)
-for /f "delims=" %%D in ('dir /a:d /b') do (
-    set /a i=0
-    :checkexcludebatch
-    set /a i+=1
-    if not defined param%i% ( goto exitexcludebatch )
-    if !param1!=="ENCODE ALL" goto finishexludebatch
-    if !param%i%!==%%~nxD goto exitexcludebatch
-    :finishexludebatch
-    pushd %cd%\%%~nxD
-    call :encodedirectory
-    popd
-    :exitexcludebatch
-    
-)
-
-goto end
+if !para1!==null ( exit)
+set /a i=0 & set /a j=1
+:checkexcludebatch
+set /a i+=1
+if "!para1!"=="ENCODE ALL" goto finishexludebatch
+if !para%i%!==!currentfolder%j%! goto endexludebatchinstance
+if [!para%i%!]==[] goto finishexludebatch
+if !i!==100 exit
+goto checkexcludebatch
+:finishexludebatch
+pushd %cd%\!currentfolder%j%!
+if [!fps!]==[] call :askinfo
+call :encodedirectory
+popd
+:endexludebatchinstance
+set /a j+=1 & set /a i=0
+if [!currentfolder%j%!]==[] goto end
+goto checkexcludebatch
 
 :folderencode
 set responseconfirm=1
@@ -100,6 +119,7 @@ call :msgbox "There is nothing to encode. Try dragging a file/folder onto the ba
 exit
 
 :end
+echo. & echo Finished
 call :msgbox "Finished"
 exit
 
@@ -121,6 +141,8 @@ exit /b
 
     REM inputbox in wscript to ask for codec and fps.(could have maybe just used a function for ask and used it twice but hybrid has limitations) usage - call :askinfo
 :askinfo
+if !dontaskinputs!==1 ( set fps=!defaultfps! & set format=!defaultcodec!
+exit /b)
 :wscript.echo InputBox("What codec would you like to use? [xvid, prores, h264]","Codec - prorecv1.5","")
 :wscript.echo InputBox("What fps would you like to use?","FPS - prorecv1.5","600")
 findstr "^:wscript" "%~sf0">!tempfiledir!tmp.vbs
@@ -146,6 +168,8 @@ exit /b
 
     REM selection list for selecting items using wscript and a handful of other stuff. usage - call :selectionlist "[option1] [option2] [option3] ..."
 :selectionlist
+if !alwaysencodeall!==1 ( set para1="ENCODE ALL" 
+exit /b)
 set allselectargs =
 :checkselectionargs
 if [%1]==[] goto endselectionargs
@@ -154,9 +178,9 @@ shift /1
 goto checkselectionargs
 :endselectionargs
 set /a i=0
-findstr /e "'VBS" "%~f0">!tempfiledir!tmp.vbs & for /f "delims=" %%n in ('cscript //nologo !tempfiledir!tmp.vbs "ENCODE ALL"!allselectargs!') do ( set /a i+=1 & set param!i!=%%n)
+findstr /e "'VBS" "%~f0">!tempfiledir!tmp.vbs & for /f "delims=" %%n in ('cscript //nologo !tempfiledir!tmp.vbs "ENCODE ALL"!allselectargs!') do ( set /a i+=1 & set para!i!=%%n)
 del !tempfiledir!tmp.vbs
-if !param1!==null ( call :msgbox "Cancelled")
+if !para1!==null ( call :msgbox "Cancelled")
 exit /b
 
     REM used to create encoded folder and to create encoded files within same directory (basically gmzorz thing). usage - call :encodedirectory
@@ -164,12 +188,12 @@ exit /b
 for %%a in (*.mp4, *.avi, *.wmv, *.mov, *.m4v) do (
     set file=%%a
     set name=%%~na
-    echo !file!
-    echo !name!
     if !createcopy!==1 ( echo trash) else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
     set inputdirectory=!file! & set "outputdirectory=!foldername!!format!\!name!" )
+    echo Encoding: !cd!\!inputdirectory!
     call :encodesettings
     !%format%!
+    echo.
 )
 exit /b
 
@@ -490,13 +514,13 @@ End Class 'VBS
 
        REM --------------------------FFMPEG CONFIG--------------------------
 
-    REM apart from the h264 config, this is pretty much the same as gmzorz's prorec config (may add more in the future)
+    REM apart from the h264 config, this is pretty much the same as gmzorz's prorec config but with less verbose output (may add more options in the future)
 :encodesettings
-set "xvid=ffmpeg -r ^"!fps!^" -i ^"!inputdirectory!^" -c:v mpeg4 -vtag xvid -qscale:v 1 -qscale:a 1 -g 32 -vsync 1 -y ^"!outputdirectory!^".avi"
+set "xvid=ffmpeg -loglevel error -stats -r ^"!fps!^" -i ^"!inputdirectory!^" -c:v mpeg4 -vtag xvid -qscale:v 1 -qscale:a 1 -g 32 -vsync 1 -y ^"!outputdirectory!^".avi"
     REM for fast editing during hcs or editing contests (slower playback speed+worse quality but really speedy encode time)
-set "prores=ffmpeg -r ^"!fps!^" -i ^"!inputdirectory!^" -c:v prores_ks -profile:v 3 -c:a pcm_s16le -y ^"!outputdirectory!^".mov"
+set "prores=ffmpeg -loglevel error -stats  -r ^"!fps!^" -i ^"!inputdirectory!^" -c:v prores_ks -profile:v 3 -c:a pcm_s16le -y ^"!outputdirectory!^".mov"
     REM general use codec for regular prerecs or cinematics (better playback speed+quality but 10x slower encode time)
-set "h264=ffmpeg -r ^"!fps!^" -i ^"!inputdirectory!^" -c:v libx264 -crf 4 -y ^"!outputdirectory!^".mp4"
+set "h264=ffmpeg -loglevel error -stats  -r ^"!fps!^" -i ^"!inputdirectory!^" -c:v libx264 -crf 4 -y ^"!outputdirectory!^".mp4"
     REM good for creating prerecs but vegas incompatible (relatively small file size) im pretty sure you can vdub these
 exit /b
 
