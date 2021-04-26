@@ -1,7 +1,7 @@
 @echo off
           REM Comments
 
-    REM EXPERIMENTAL PROREC v1.5.1
+    REM PROREC v1.5.1 RELEASE
 
     REM ffmpeg batch program for prores, xvid, and h264 encoding for entire prerec folders/indivdual rec files w/basic ui
     REM currently WIP
