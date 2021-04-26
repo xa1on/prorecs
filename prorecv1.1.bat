@@ -1,6 +1,8 @@
 @echo off
           REM Comments
 
+    REM PROREC v1.1 RELEASE
+
     REM ffmpeg batch program for prores, xvid, and h264 encoding for entire prerec folders/indivdual rec files w/basic ui
     REM currently WIP
 
@@ -45,7 +47,7 @@ goto empty
 
 :singlefileencode
 set responseconfirm=1
-if %dontconfirm%==0 call :confirm "Single file encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Single File - prorecv1.5"
+if %dontconfirm%==0 call :confirm "Single file encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Single File - prorecv1.1"
 if !responseconfirm!==0 ( exit)
 call :askinfo
 set file=%~n1%~x1
@@ -60,7 +62,7 @@ goto end
 
 :folderencode
 set responseconfirm=1
-if %dontconfirm%==0 call :confirm "Single directory encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Single Directory - prorecv1.5"
+if %dontconfirm%==0 call :confirm "Single directory encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Single Directory - prorecv1.1"
 if !responseconfirm!==0 ( exit)
 call :askinfo
 set filename=%cd%~1
@@ -87,8 +89,8 @@ exit /b
 
     REM inputbox in wscript to ask for codec and fps.(could have maybe just used a function for ask and used it twice but hybrid has limitations) usage - call :askinfo
 :askinfo
-:wscript.echo InputBox("What codec would you like to use? [xvid, prores, h264]","Codec - prorecv1.5","")
-:wscript.echo InputBox("What fps would you like to use?","FPS - prorecv1.5","600")
+:wscript.echo InputBox("What codec would you like to use? [xvid, prores, h264]","Codec - prorecv1.1","")
+:wscript.echo InputBox("What fps would you like to use?","FPS - prorecv1.1","600")
 findstr "^:wscript" "%~sf0">!tempfiledir!tmp.vbs
 set i=0 & for /f "delims=" %%n in ('cscript //nologo !tempfiledir!tmp.vbs') do ( set /a i+=1 & set param!i!=%%n)
 set format=%param1%& set fps=%param2%

@@ -1,6 +1,8 @@
 @echo off
           REM Comments
 
+    REM PROREC v1.5.1 RELEASE
+
     REM ffmpeg batch program for prores, xvid, and h264 encoding for entire prerec folders/indivdual rec files w/basic ui
     REM currently WIP
 
@@ -12,13 +14,15 @@
 
        REM vvvvv scroll to the bottom if you want to edit the ffmpeg config vvvvv
 
-          REM program env variables
+          REM program env variables (change these to whatever you want)
+
+set noUI=1
+    REM L Fully automates things without any dialog, only relying on default values set. This bypasses dontconfirm, alwaysencodeall, and dontaskinput when set to 1. (1=on 0=off) default - 0
+
 set foldername="e_"
     REM L set this to whatever you want as the prefix for the created folder/file. default - "encoded_" 
 set createcopy=0
     REM L creates encoded copy of the files/folders rather than creating a folder within selected folders for encoded files. basically 0 for old prorec folder being created or 1 for copy of folder/file (1=on 0=off) default - 1
-set noUI=1
-    REM L does things automatically without any dialog, only relying on default values below. This bypasses values set for dontconfirm, alwaysencodeall, and dontaskinput when set to 1. (1=on 0=off) default - 0
 set dontconfirm=0
     REM L Confirm encode type dialog toggle. (1=on 0=off) default - 0
 set alwaysencodeall=0
@@ -27,10 +31,10 @@ set dontaskinputs=0
     REM L Asking for fps and codec toggle. (1=on, 0=off) default - 0
 
     REM DEFAULT FPS AND DEFAULT CODEC ONLY TAKES EFFECT WHEN dontaskinputs OR noUI IS ON.
-       REM In order to switch default codec and fps when dontaskinputs is on, go to line # and change the third parameter
+       REM In order to switch default codec and fps when dontaskinputs is off, go to line #placeholder and change the third parameter in the code for either option
 set defaultfps=600
 set defaultcodec=xvid
-    REM self explainitory, read above comment.
+    REM self explainitory, read above comment. defaults fps-600, codec-xvid
 
 set tempfiledir="%tmp%\"
     REM L this is where the program puts the temp vbs files. Don't edit this if the program works as intended with its default value "%tmp%\"
