@@ -16,7 +16,7 @@
 
           REM program env variables (change these to whatever you want)
 
-set noUI=1
+set noUI=0
     REM L Fully automates things without any dialog, only relying on default values set. This bypasses dontconfirm, alwaysencodeall, and dontaskinput when set to 1. (1=on 0=off) default - 0
 
 set foldername="e_"
