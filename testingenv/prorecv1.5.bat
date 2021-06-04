@@ -19,9 +19,9 @@
 set noUI=1
     REM L Fully automates things without any dialog, only relying on default values set. This bypasses dontconfirm, alwaysencodeall, and dontaskinput when set to 1. (1=on 0=off) default - 0
 
-set foldername="e_"
+set foldername=e_
     REM L set this to whatever you want as the prefix for the created folder/file. default - "encoded_" 
-set createcopy=0
+set createcopy=1
     REM L creates encoded copy of the files/folders rather than creating a folder within selected folders for encoded files. basically 0 for old prorec folder being created or 1 for copy of folder/file (1=on 0=off) default - 1
 set dontconfirm=0
     REM L Confirm encode type dialog toggle. (1=on 0=off) default - 0
@@ -80,6 +80,7 @@ call :encodesettings
 goto end
 
 :batchfolderencode:
+set startfolder=%cd%
 set responseconfirm=1
 if %dontconfirm%==0 call :confirm "Batch Folder encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Batch Folder - prorecv1.5"
 if !responseconfirm!==0 ( call :msgbox "Make sure to move/remove all folders within the target folder if you only want to encode the target folder files." & exit)
@@ -100,10 +101,16 @@ if [!para%i%!]==[] goto finishexludebatch
 if !i!==100 exit
 goto checkexcludebatch
 :finishexludebatch
-pushd %cd%\!currentfolder%j%!
+pushd !startfolder!\!currentfolder%j%!
 if [!fps!]==[] call :askinfo
+set "folderprefix=!foldername!!format!"
+set /a prefixlength=0
+:prefixcalcbatch
+if not "!folderprefix:~%prefixlength%,1!"=="" ( set /a prefixlength+=1 & goto prefixcalcbatch)
+:endprefixcalcbatch
+if "!currentfolder%j%:~0,%prefixlength%!"=="!folderprefix!" ( goto endexludebatchinstance)
 call :encodedirectory
-popd
+cd !startfolder!
 :endexludebatchinstance
 set /a j+=1 & set /a i=0
 if [!currentfolder%j%!]==[] goto end
@@ -189,16 +196,27 @@ exit /b
 
     REM used to create encoded folder and to create encoded files within same directory (basically gmzorz thing). usage - call :encodedirectory
 :encodedirectory
+set prevdir=!cd!
+for %%* in (.) do set prevdirname=%%~nx*
 for %%a in (*.mp4, *.avi, *.wmv, *.mov, *.m4v) do (
     set file=%%a
     set name=%%~na
-    if !createcopy!==1 ( echo trash) else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
-    set inputdirectory=!file! & set "outputdirectory=!foldername!!format!\!name!" )
-    echo Encoding: !cd!\!inputdirectory!
+    if !createcopy!==1 ( cd .. & if not exist "!foldername!!format!_!prevdirname!" ( xcopy /i /e /q /v "!prevdir!\*.*" "!cd!\!foldername!!format!_!prevdirname!" )
+    cd "!cd!\!foldername!!format!_!prevdirname!" & if not exist "CURRENTLYENCODING.txt" (
+    for %%p in (*.mp4, *.avi, *.wmv, *.mov, *.m4v) do ( del %%p)
+    echo.>"!cd!\CURRENTLYENCODING.txt")
+    set "inputdirectory=!prevdir!\!file!" & set "outputdirectory=!name!") else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
+    set "inputdirectory=!file!" & set "outputdirectory=!foldername!!format!\!name!" )
+    echo Encoding "!inputdirectory!" with !format! to "!outputdirectory!"
     call :encodesettings
     !%format%!
     echo.
+    cd !prevdir!
 )
+cd ..
+if exist "!foldername!!format!_!prevdirname!" ( cd "!cd!\!foldername!!format!_!prevdirname!"
+if exist *.txt del /s *.txt 1>nul )
+cd !prevdir!
 exit /b
 
     REM temp vbs script for selection lists (source:https://stackoverflow.com/questions/47100085/creating-multi-select-list-box-in-vbscript) Used for call :selectionlist ...
@@ -224,7 +242,7 @@ Next 'VBS
 With New clsSmallWrapperForm 'VBS
     ' Setup window 'VBS
     .ShowInTaskbar = "yes" 'VBS
-    .Title = "Select Folders to Exclude - prorecv1.5" 'VBS
+    .Title = "Select Folders/Files to Exclude - prorecv1.5" 'VBS
     .BackgroundImage = BGI 'VBS
     .Width = 354 'VBS
     .Height = 118 'VBS
@@ -274,7 +292,7 @@ With New clsSmallWrapperForm 'VBS
         .style.top = "98px" 'VBS
         .style.width = "350px" 'VBS
     End With 'VBS
-    .AddText "Choose excluded folders or select 'ENCODE ALL'." 'VBS
+    .AddText "Choose excluded folders/files or select 'ENCODE ALL'." 'VBS
     .AppendTo "Form" 'VBS
     ' Show window 'VBS
     .Visible = True 'VBS

@@ -62,7 +62,11 @@ if [%1]==[] (
     )
 )
 for /f "delims=" %%D in ('dir /a:d /b') do ( goto batchfolderencode)
-if exist *.mp4 goto folderencode & if exist *.avi goto folderencode & if exist *.wmv goto folderencode & if exist *.mov goto folderencode & if exist *.m4v goto folderencode
+if exist *.mp4 (goto folderencode )
+if exist *.avi (goto folderencode )
+if exist *.wmv (goto folderencode )
+if exist *.mov (goto folderencode )
+if exist *.m4v (goto folderencode )
 goto empty
 
 :singlefileencode
