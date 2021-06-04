@@ -10,6 +10,7 @@
 
     REM second time doing anything in batch so bear with me.
     REM message me on discord if you have any questions: something#7597
+    REM or dm me on twitter @xalondzn
 
 
        REM vvvvv scroll to the bottom if you want to edit the ffmpeg config vvvvv
@@ -17,7 +18,7 @@
           REM program env variables (change these to whatever you want)
 
 set noUI=1
-    REM L Fully automates things without any dialog, only relying on default values set. This bypasses dontconfirm, alwaysencodeall, and dontaskinput when set to 1. (1=on 0=off) default - 0
+    REM L Fully automates things without any dialog, only relying on default values set. This bypasses dontconfirm, alwaysencodeall, and dontaskinputs when set to 1. (1=on 0=off) default - 0
 
 set foldername=e_
     REM L set this to whatever you want as the prefix for the created folder/file. default - "encoded_" 
@@ -27,14 +28,14 @@ set dontconfirm=0
     REM L Confirm encode type dialog toggle. (1=on 0=off) default - 0
 set alwaysencodeall=0
     REM L Select exclude file/folder dialog toggle and encodes all. (1=on 0=off) default - 0
-set dontaskinputs=0
+set dontaskinputs=1
     REM L Asking for fps and codec toggle. (1=on, 0=off) default - 0
 
-    REM DEFAULT FPS AND DEFAULT CODEC ONLY TAKES EFFECT WHEN dontaskinputs OR noUI IS ON.
+    REM DEFAULT FPS AND DEFAULT CODEC IS EXCLUSIVELY FOR WHEN noUI AND dontaskinputs ARE SET TO 1
        REM In order to switch default codec and fps when dontaskinputs is off, go to line #placeholder and change the third parameter in the code for either option
 set defaultfps=600
 set defaultcodec=xvid
-    REM self explainitory, read above comment. defaults fps-600, codec-xvid
+    REM L self explainitory, read above comment. defaults fps-600, codec-xvid
 
 set tempfiledir="%tmp%\"
     REM L this is where the program puts the temp vbs files. Don't edit this if the program works as intended with its default value "%tmp%\"
@@ -47,10 +48,12 @@ setlocal enabledelayedexpansion
 goto init
 
 :init
+pushd %~dp0
 echo.
 if !noUI!==1 ( set dontconfirm=1
 set alwaysencodeall=1
 set dontaskinputs=1)
+call :reloadconfig
 if [%1]==[] (
     set isDragged=0
     pushd %~dp0
@@ -63,8 +66,16 @@ if [%1]==[] (
     )
 )
 for /f "delims=" %%D in ('dir /a:d /b') do ( goto batchfolderencode)
-if exist *.mp4 goto folderencode & if exist *.avi goto folderencode & if exist *.wmv goto folderencode & if exist *.mov goto folderencode & if exist *.m4v goto folderencode
+if exist *.mp4 (goto folderencode )
+if exist *.avi (goto folderencode )
+if exist *.wmv (goto folderencode )
+if exist *.mov (goto folderencode )
+if exist *.m4v (goto folderencode )
 goto empty
+
+:reloadconfig
+call :encodesettings
+exit /b
 
 :singlefileencode
 set responseconfirm=1
@@ -75,7 +86,7 @@ set file=%~n1%~x1
 set name=%~n1
 if !createcopy!==1 ( set inputdirectory=!file! & set "outputdirectory=!foldername!!format!_!name!") else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
 set inputdirectory=!file! & set "outputdirectory=!foldername!!format!\!name!" )
-call :encodesettings
+call :reloadconfig
 !%format%!
 goto end
 
@@ -154,7 +165,7 @@ exit /b
 :askinfo
 if !dontaskinputs!==1 ( set fps=!defaultfps! & set format=!defaultcodec!
 exit /b)
-:wscript.echo InputBox("What codec would you like to use? [xvid, prores, h264]","Codec - prorecv1.5","")
+:wscript.echo InputBox("What codec would you like to use? [xvid recommended]","Codec - prorecv1.5","")
 :wscript.echo InputBox("What fps would you like to use?","FPS - prorecv1.5","600")
 findstr "^:wscript" "%~sf0">!tempfiledir!tmp.vbs
 set i=0 & for /f "delims=" %%n in ('cscript //nologo !tempfiledir!tmp.vbs') do ( set /a i+=1 & set param!i!=%%n)
@@ -201,22 +212,16 @@ for %%* in (.) do set prevdirname=%%~nx*
 for %%a in (*.mp4, *.avi, *.wmv, *.mov, *.m4v) do (
     set file=%%a
     set name=%%~na
-    if !createcopy!==1 ( cd .. & if not exist "!foldername!!format!_!prevdirname!" ( xcopy /i /e /q /v "!prevdir!\*.*" "!cd!\!foldername!!format!_!prevdirname!" )
-    cd "!cd!\!foldername!!format!_!prevdirname!" & if not exist "CURRENTLYENCODING.txt" (
-    for %%p in (*.mp4, *.avi, *.wmv, *.mov, *.m4v) do ( del %%p)
-    echo.>"!cd!\CURRENTLYENCODING.txt")
+    if !createcopy!==1 ( cd .. & if not exist "!foldername!!format!_!prevdirname!" ( mkdir "!foldername!!format!_!prevdirname!" )
+    cd "!cd!\!foldername!!format!_!prevdirname!"
     set "inputdirectory=!prevdir!\!file!" & set "outputdirectory=!name!") else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
     set "inputdirectory=!file!" & set "outputdirectory=!foldername!!format!\!name!" )
     echo Encoding "!inputdirectory!" with !format! to "!outputdirectory!"
-    call :encodesettings
+    call :reloadconfig
     !%format%!
     echo.
     cd !prevdir!
 )
-cd ..
-if exist "!foldername!!format!_!prevdirname!" ( cd "!cd!\!foldername!!format!_!prevdirname!"
-if exist *.txt del /s *.txt 1>nul )
-cd !prevdir!
 exit /b
 
     REM temp vbs script for selection lists (source:https://stackoverflow.com/questions/47100085/creating-multi-select-list-box-in-vbscript) Used for call :selectionlist ...
@@ -534,7 +539,7 @@ End Class 'VBS
 )
 
 
-       REM --------------------------FFMPEG CONFIG--------------------------
+       REM --------------------------FFMPEG CONFIGS--------------------------
 
     REM apart from the h264 config, this is pretty much the same as gmzorz's prorec config but with less verbose output (may add more options in the future)
 :encodesettings
