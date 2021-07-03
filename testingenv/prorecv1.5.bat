@@ -17,18 +17,18 @@
 
           REM program env variables (change these to whatever you want)
 
-set noUI=1
+set noUI=0
     REM L Fully automates things without any dialog, only relying on default values set. This bypasses dontconfirm, alwaysencodeall, and dontaskinputs when set to 1. (1=on 0=off) default - 0
 
 set foldername=e_
     REM L set this to whatever you want as the prefix for the created folder/file. default - "encoded_" 
-set createcopy=1
-    REM L creates encoded copy of the files/folders rather than creating a folder within selected folders for encoded files. basically 0 for old prorec folder being created or 1 for copy of folder/file (1=on 0=off) default - 1
+set alwayscreatecopy=1
+    REM L always creates encoded copy of the files/folders rather than creating a folder within selected folders for encoded files. basically 0 for old prorec folder being created or 1 for copy of folder/file (1=on 0=off) default - 0
 set dontconfirm=0
     REM L Confirm encode type dialog toggle. (1=on 0=off) default - 0
 set alwaysencodeall=0
     REM L Select exclude file/folder dialog toggle and encodes all. (1=on 0=off) default - 0
-set dontaskinputs=1
+set dontaskinputs=0
     REM L Asking for fps and codec toggle. (1=on, 0=off) default - 0
 
     REM DEFAULT FPS AND DEFAULT CODEC IS EXCLUSIVELY FOR WHEN noUI AND dontaskinputs ARE SET TO 1
@@ -54,6 +54,9 @@ if !noUI!==1 ( set dontconfirm=1
 set alwaysencodeall=1
 set dontaskinputs=1)
 call :reloadconfig
+if %alwayscreatecopy%==0 call :confirm "Create copy of folder/files? (The folder will always have a duplicate encoded version in itself, but it will be in the parent directory rather than inside the folder. You can disable this popup by setting alwayscreatecopy = 1 in the batch file)" "Create Copy - prorecv1.5"
+if !responseconfirm!==1 ( set createcopy=1)
+echo !createcopy!
 if [%1]==[] (
     set isDragged=0
     pushd %~dp0
