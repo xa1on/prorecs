@@ -14,7 +14,7 @@ prorecv is used mainly for encoding multiple folders worth of pre-recordings and
 
 ## Requirements
 
-* **[prerecv][https://github.com/xa1on/prerecv/releases]**
+* **[prerecv](https://github.com/xa1on/prerecv/releases)**
 * [ffmpeg](https://ffmpeg.org/download.html#build-windows) - [Tutorial](https://www.youtube.com/watch?v=r1AtmY-RMyQ)
 * [Xvid](https://www.xvid.com/download/)
 * [quicktime](https://support.apple.com/kb/DL837)
