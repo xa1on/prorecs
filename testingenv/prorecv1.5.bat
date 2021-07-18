@@ -13,9 +13,9 @@
     REM or dm me on twitter @xalondzn
 
 
-       REM vvvvv scroll to the bottom if you want to edit the ffmpeg config vvvvv
+       REM vvvvv scroll to the bottom if you want to see ffmpeg settingsvvvvv
 
-          REM program env variables (change these to whatever you want)
+          REM program env variables (change these to whatever you want) CONFIG FILES BYPASS THESE
 
 set noUI=0
     REM L Fully automates things without any dialog, only relying on default values set. This bypasses dontconfirm, alwaysencodeall, and dontaskinputs when set to 1. (1=on 0=off) default - 0
@@ -37,7 +37,7 @@ set defaultfps=600
 set defaultcodec=xvid
     REM L self explainitory, read above comment. defaults fps-600, codec-xvid
 
-set tempfiledir="%tmp%\"
+set tempfiledir="%tmp%"
     REM L this is where the program puts the temp vbs files. Don't edit this if the program works as intended with its default value "%tmp%\"
        
 
@@ -48,15 +48,15 @@ setlocal enabledelayedexpansion
 goto init
 
 :init
+call :reloadconfig
 pushd %~dp0
 echo.
 if !noUI!==1 ( set dontconfirm=1
 set alwaysencodeall=1
 set dontaskinputs=1)
-call :reloadconfig
 if %alwayscreatecopy%==0 call :confirm "Create copy of folder/files? (The folder will always have a duplicate encoded version in itself, but it will be in the parent directory rather than inside the folder. You can disable this popup by setting alwayscreatecopy = 1 in the batch file)" "Create Copy - prorecv1.5"
-if !responseconfirm!==1 ( set createcopy=1)
-echo !createcopy!
+set createcopy=1
+if !responseconfirm!==0 ( set createcopy=0)
 if [%1]==[] (
     set isDragged=0
     pushd %~dp0
@@ -77,7 +77,14 @@ if exist *.m4v (goto folderencode )
 goto empty
 
 :reloadconfig
+pushd %~dp0
 call :encodesettings
+if exist *.cfg ( for /r %%i in (*.cfg) do ( set "configfile=%%~nxi" & for /f "delims=" %%x in (!configfile!) do ( set currentline=%%x & call :processline) ) )
+popd
+exit /b
+
+:processline
+if not "%currentline:~0,1%"=="#" ( echo !currentline! & set !currentline!)
 exit /b
 
 :singlefileencode
@@ -87,9 +94,9 @@ if !responseconfirm!==0 ( exit)
 call :askinfo
 set file=%~n1%~x1
 set name=%~n1
-if !createcopy!==1 ( set inputdirectory=!file! & set "outputdirectory=!foldername!!format!_!name!") else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
+if !createcopy!==1 ( set inputdirectory=!file! & "outputdirectory=!foldername!!format!_!name!") else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
 set inputdirectory=!file! & set "outputdirectory=!foldername!!format!\!name!" )
-call :reloadconfig
+:reloadconfig
 !%format%!
 goto end
 
@@ -159,9 +166,9 @@ exit
 
     REM msgbox in Wscript. usage - call :msgbox "[message]"
 :msgbox
-echo msgbox "%~1" > !tempfiledir!tmp.vbs
-wscript !tempfiledir!tmp.vbs
-del !tempfiledir!tmp.vbs
+echo msgbox "%~1" > !tempfiledir!\tmp.vbs
+wscript !tempfiledir!\tmp.vbs
+del !tempfiledir!\tmp.vbs
 exit /b
 
     REM inputbox in wscript to ask for codec and fps.(could have maybe just used a function for ask and used it twice but hybrid has limitations) usage - call :askinfo
@@ -170,17 +177,17 @@ if !dontaskinputs!==1 ( set fps=!defaultfps! & set format=!defaultcodec!
 exit /b)
 :wscript.echo InputBox("What codec would you like to use? [xvid recommended]","Codec - prorecv1.5","")
 :wscript.echo InputBox("What fps would you like to use?","FPS - prorecv1.5","600")
-findstr "^:wscript" "%~sf0">!tempfiledir!tmp.vbs
-set i=0 & for /f "delims=" %%n in ('cscript //nologo !tempfiledir!tmp.vbs') do ( set /a i+=1 & set param!i!=%%n)
+findstr "^:wscript" "%~sf0">!tempfiledir!\tmp.vbs
+set i=0 & for /f "delims=" %%n in ('cscript //nologo !tempfiledir!\tmp.vbs') do ( set /a i+=1 & set param!i!=%%n)
 set format=%param1%& set fps=%param2%
-del !tempfiledir!tmp.vbs
+del !tempfiledir!\tmp.vbs
 exit /b
 
     REM Wscript yes no popup that sets responseconfirm to 1 or 0 based off response. usage - call :confirm "[message]" "[title]"
 :confirm
-echo set WshShell = WScript.CreateObject("WScript.Shell") > !tempfiledir!tmp.vbs
-echo WScript.Quit (WshShell.Popup( "%~1" ,0 ,"%~2", vbYesNo)) >> !tempfiledir!tmp.vbs
-cscript /nologo !tempfiledir!tmp.vbs
+echo set WshShell = WScript.CreateObject("WScript.Shell") > !tempfiledir!\tmp.vbs
+echo WScript.Quit (WshShell.Popup( "%~1" ,0 ,"%~2", vbYesNo)) >> !tempfiledir!\tmp.vbs
+cscript /nologo !tempfiledir!\tmp.vbs
 if !errorlevel!==6 ( set responseconfirm=1) else ( set responseconfirm=0)
 exit /b
 
@@ -203,8 +210,8 @@ shift /1
 goto checkselectionargs
 :endselectionargs
 set /a i=0
-findstr /e "'VBS" "%~f0">!tempfiledir!tmp.vbs & for /f "delims=" %%n in ('cscript //nologo !tempfiledir!tmp.vbs "ENCODE ALL"!allselectargs!') do ( set /a i+=1 & set para!i!=%%n)
-del !tempfiledir!tmp.vbs
+findstr /e "'VBS" "%~f0">!tempfiledir!\tmp.vbs & for /f "delims=" %%n in ('cscript //nologo !tempfiledir!\tmp.vbs "ENCODE ALL"!allselectargs!') do ( set /a i+=1 & set para!i!=%%n)
+del !tempfiledir!\tmp.vbs
 if !para1!==null ( call :msgbox "Cancelled")
 exit /b
 
@@ -220,7 +227,8 @@ for %%a in (*.mp4, *.avi, *.wmv, *.mov, *.m4v) do (
     set "inputdirectory=!prevdir!\!file!" & set "outputdirectory=!name!") else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
     set "inputdirectory=!file!" & set "outputdirectory=!foldername!!format!\!name!" )
     echo Encoding "!inputdirectory!" with !format! to "!outputdirectory!"
-    call :reloadconfig
+    :reloadconfig
+    echo !xvid!
     !%format%!
     echo.
     cd !prevdir!
