@@ -1,7 +1,7 @@
 @echo off
           REM Comments
 
-    REM EXPERIMENTAL PROREC v1.5.1
+    REM EXPERIMENTAL PREREC v1.5.1
 
     REM ffmpeg batch program for prores, xvid, and h264 encoding for entire prerec folders/indivdual rec files w/basic ui
     REM currently WIP
@@ -16,7 +16,7 @@
 
        REM --------------------------FFMPEG SETTINGS--------------------------
 
-REM apart from the h264 config, this is pretty much the same as gmzorz's prorec config but with less verbose output (may add more options in the future)
+REM apart from the h264 config, this is pretty much the same as gmzorz's prerec config but with less verbose output (may add more options in the future)
 set "xvid=ffmpeg -loglevel error -stats -r ^"-fps-^" -i ^"-inputdirectory-^" -c:v mpeg4 -vtag xvid -qscale:v 1 -qscale:a 1 -g 32 -vsync 1 -y ^"-outputdirectory-^".avi"
     REM for fast editing during hcs or editing contests (slower playback speed+worse quality but really speedy encode time)
 set "prores=ffmpeg -loglevel error -stats  -r ^"-fps-^" -i ^"-inputdirectory-^" -c:v prores_ks -profile:v 3 -c:a pcm_s16le -y ^"-outputdirectory-^".mov"
@@ -34,7 +34,7 @@ set noUI=0
 set foldername=e_
     REM L set this to whatever you want as the prefix for the created folder/file. default - "encoded_" 
 set alwayscreatecopy=1
-    REM L always creates encoded copy of the files/folders rather than creating a folder within selected folders for encoded files. basically 0 for old prorec folder being created or 1 for copy of folder/file (1=on 0=off) default - 0
+    REM L always creates encoded copy of the files/folders rather than creating a folder within selected folders for encoded files. basically 0 for old prerec folder being created or 1 for copy of folder/file (1=on 0=off) default - 1
 set dontconfirm=0
     REM L Confirm encode type dialog toggle. (1=on 0=off) default - 0
 set alwaysencodeall=0
@@ -44,7 +44,7 @@ set dontaskinputs=0
 
 
 
-    REM DEFAULT FPS AND DEFAULT CODEC IS EXCLUSIVELY FOR WHEN noUI AND dontaskinputs ARE SET TO 1
+    REM DEFAULT FPS AND DEFAULT CODEC IS EXCLUSIVELY FOR WHEN noUI OR dontaskinputs ARE SET TO 1
        REM In order to switch default codec and fps when dontaskinputs is off, go to line #placeholder and change the third parameter in the code for either option
 set defaultfps=600
 set defaultcodec=xvid
@@ -67,7 +67,7 @@ call :reloadconfig
 pushd %~dp0
 echo.
 if %noUI%==1 ( set dontconfirm=1 & set alwaysencodeall=1 & set dontaskinputs=1)
-if %alwayscreatecopy%==0 call :confirm "Create copy of folder/files? (The folder will always have a duplicate encoded version in itself, but it will be in the parent directory rather than inside the folder. You can disable this popup by setting alwayscreatecopy = 1 in the batch file)" "Create Copy - prorecv1.5"
+if %alwayscreatecopy%==0 call :confirm "Create copy of folder/files? (The folder will always have a duplicate encoded version in itself, but it will be in the parent directory rather than inside the folder. You can disable this popup by setting alwayscreatecopy = 1 in the batch file)" "Create Copy - prerecv1.5"
 set createcopy=1
 if !responseconfirm!==0 ( set createcopy=0)
 if [%1]==[] (
@@ -92,7 +92,7 @@ goto empty
 
 :singlefileencode
 set responseconfirm=1
-if %dontconfirm%==0 call :confirm "Single file encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Single File - prorecv1.5"
+if %dontconfirm%==0 call :confirm "Single file encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Single File - prerecv1.5"
 if !responseconfirm!==0 ( exit)
 call :askinfo
 set file=%~n1%~x1
@@ -105,7 +105,7 @@ goto end
 :batchfolderencode:
 set startfolder=%cd%
 set responseconfirm=1
-if %dontconfirm%==0 call :confirm "Batch Folder encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Batch Folder - prorecv1.5"
+if %dontconfirm%==0 call :confirm "Batch Folder encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Batch Folder - prerecv1.5"
 if !responseconfirm!==0 ( call :msgbox "Make sure to move/remove all folders within the target folder if you only want to encode the target folder files." & exit)
 set allfolders = 
 for /f "delims=" %%D in ('dir /a:d /b') do (
@@ -141,7 +141,7 @@ goto checkexcludebatch
 
 :folderencode
 set responseconfirm=1
-if %dontconfirm%==0 call :confirm "Single directory encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Single Directory - prorecv1.5"
+if %dontconfirm%==0 call :confirm "Single directory encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Single Directory - prerecv1.5"
 if !responseconfirm!==0 ( exit)
 call :askinfo
 set filename=%cd%~1
@@ -168,8 +168,7 @@ exit
 
 :reloadconfig
 pushd %~dp0
-call :encodesettings
-if exist *.cfg ( for /r %%i in (*.cfg) do ( set "configfile=%%~nxi" & for /f "delims=" %%x in (!configfile!) do ( set currentline=%%x & call :processline) ) )
+if exist *.cfg ( for /r %%i in (*.cfg) do ( set "configfile=%%~nxi" & for /f "delims=" %%x in (!configfile!) do ( set currentline=%%x& call :processline) ) )
 popd
 exit /b
 
@@ -182,7 +181,7 @@ echo "!inputdirectory!" with !format! to "!outputdirectory!"
 set inputdirectory=!inputdirectory:%%=[hash]!
 set outputdirectory=!outputdirectory:%%=[hash]!
 set currentformat=!%format%!
-call set currentformat=%%currentformat:-fps-=!fps!%% & call set currentformat=%%currentformat:-inputdirectory-=!inputdirectory!%% & call set currentformat=%%currentformat:-outputdirectory-=!outputdirectory!%%
+call set currentformat=%%currentformat:-fps-=!fps!%%& call set currentformat=%%currentformat:-inputdirectory-=!inputdirectory!%%& call set currentformat=%%currentformat:-outputdirectory-=!outputdirectory!%%
 set currentformat=!currentformat:[hash]=%%!
 !currentformat!
 exit /b
@@ -215,8 +214,8 @@ exit /b
 :askinfo
 if !dontaskinputs!==1 ( set fps=!defaultfps!& set format=!defaultcodec!
 exit /b)
-:wscript.echo InputBox("What codec would you like to use? [xvid recommended]","Codec - prorecv1.5","")
-:wscript.echo InputBox("What fps would you like to use?","FPS - prorecv1.5","600")
+:wscript.echo InputBox("What codec would you like to use? [xvid recommended]","Codec - prerecv1.5","")
+:wscript.echo InputBox("What fps would you like to use?","FPS - prerecv1.5","600")
 findstr "^:wscript" "%~sf0">!tempfiledir!\tmp.vbs
 set i=0 & for /f "delims=" %%n in ('cscript //nologo !tempfiledir!\tmp.vbs') do ( set /a i+=1 & set param!i!=%%n)
 set format=%param1%& set fps=%param2%
@@ -279,7 +278,7 @@ Next 'VBS
 With New clsSmallWrapperForm 'VBS
     ' Setup window 'VBS
     .ShowInTaskbar = "yes" 'VBS
-    .Title = "Select Folders/Files to Exclude - prorecv1.5" 'VBS
+    .Title = "Select Folders/Files to Exclude - prerecv1.5" 'VBS
     .BackgroundImage = BGI 'VBS
     .Width = 354 'VBS
     .Height = 118 'VBS
