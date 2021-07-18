@@ -13,7 +13,18 @@
     REM or dm me on twitter @xalondzn
 
 
-       REM vvvvv scroll to the bottom if you want to see ffmpeg settingsvvvvv
+
+       REM --------------------------FFMPEG SETTINGS--------------------------
+
+REM apart from the h264 config, this is pretty much the same as gmzorz's prorec config but with less verbose output (may add more options in the future)
+set "xvid=ffmpeg -loglevel error -stats -r ^"-fps-^" -i ^"-inputdirectory-^" -c:v mpeg4 -vtag xvid -qscale:v 1 -qscale:a 1 -g 32 -vsync 1 -y ^"-outputdirectory-^".avi"
+    REM for fast editing during hcs or editing contests (slower playback speed+worse quality but really speedy encode time)
+set "prores=ffmpeg -loglevel error -stats  -r ^"-fps-^" -i ^"-inputdirectory-^" -c:v prores_ks -profile:v 3 -c:a pcm_s16le -y ^"-outputdirectory-^".mov"
+    REM general use codec for regular prerecs or cinematics (better playback speed+quality but 10x slower encode time)
+set "h264=ffmpeg -loglevel error -stats  -r ^"-fps-^" -i ^"-inputdirectory-^" -c:v libx264 -crf 4 -y ^"-outputdirectory-^".mp4"
+    REM good for creating prerecs but vegas incompatible (relatively small file size) im pretty sure you can vdub these
+
+
 
           REM program env variables (change these to whatever you want) CONFIG FILES BYPASS THESE
 
@@ -31,6 +42,8 @@ set alwaysencodeall=0
 set dontaskinputs=0
     REM L Asking for fps and codec toggle. (1=on, 0=off) default - 0
 
+
+
     REM DEFAULT FPS AND DEFAULT CODEC IS EXCLUSIVELY FOR WHEN noUI AND dontaskinputs ARE SET TO 1
        REM In order to switch default codec and fps when dontaskinputs is off, go to line #placeholder and change the third parameter in the code for either option
 set defaultfps=600
@@ -44,6 +57,8 @@ set tempfiledir="%tmp%"
           REM vvvv code(please dont mess with this if you have no idea what you're doing) vvvv
 
 
+
+
 setlocal enabledelayedexpansion
 goto init
 
@@ -51,9 +66,7 @@ goto init
 call :reloadconfig
 pushd %~dp0
 echo.
-if !noUI!==1 ( set dontconfirm=1
-set alwaysencodeall=1
-set dontaskinputs=1)
+if %noUI%==1 ( set dontconfirm=1 & set alwaysencodeall=1 & set dontaskinputs=1)
 if %alwayscreatecopy%==0 call :confirm "Create copy of folder/files? (The folder will always have a duplicate encoded version in itself, but it will be in the parent directory rather than inside the folder. You can disable this popup by setting alwayscreatecopy = 1 in the batch file)" "Create Copy - prorecv1.5"
 set createcopy=1
 if !responseconfirm!==0 ( set createcopy=0)
@@ -76,16 +89,6 @@ if exist *.mov (goto folderencode )
 if exist *.m4v (goto folderencode )
 goto empty
 
-:reloadconfig
-pushd %~dp0
-call :encodesettings
-if exist *.cfg ( for /r %%i in (*.cfg) do ( set "configfile=%%~nxi" & for /f "delims=" %%x in (!configfile!) do ( set currentline=%%x & call :processline) ) )
-popd
-exit /b
-
-:processline
-if not "%currentline:~0,1%"=="#" ( echo !currentline! & set !currentline!)
-exit /b
 
 :singlefileencode
 set responseconfirm=1
@@ -94,10 +97,9 @@ if !responseconfirm!==0 ( exit)
 call :askinfo
 set file=%~n1%~x1
 set name=%~n1
-if !createcopy!==1 ( set inputdirectory=!file! & "outputdirectory=!foldername!!format!_!name!") else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
+if !createcopy!==1 ( set inputdirectory=!file! & set "outputdirectory=!foldername!!format!_!name!") else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
 set inputdirectory=!file! & set "outputdirectory=!foldername!!format!\!name!" )
-:reloadconfig
-!%format%!
+call :encodefile
 goto end
 
 :batchfolderencode:
@@ -164,6 +166,44 @@ exit
 
        REM functions/methods
 
+:reloadconfig
+pushd %~dp0
+call :encodesettings
+if exist *.cfg ( for /r %%i in (*.cfg) do ( set "configfile=%%~nxi" & for /f "delims=" %%x in (!configfile!) do ( set currentline=%%x & call :processline) ) )
+popd
+exit /b
+
+:processline
+if not "%currentline:~0,1%"=="#" ( set !currentline!)
+exit /b
+
+:encodefile
+echo "!inputdirectory!" with !format! to "!outputdirectory!"
+set inputdirectory=!inputdirectory:%%=[hash]!
+set outputdirectory=!outputdirectory:%%=[hash]!
+set currentformat=!%format%!
+call set currentformat=%%currentformat:-fps-=!fps!%% & call set currentformat=%%currentformat:-inputdirectory-=!inputdirectory!%% & call set currentformat=%%currentformat:-outputdirectory-=!outputdirectory!%%
+set currentformat=!currentformat:[hash]=%%!
+!currentformat!
+exit /b
+
+    REM used to create encoded folder and to create encoded files within same directory (basically gmzorz thing). usage - call :encodedirectory
+:encodedirectory
+set prevdir=!cd!
+for %%* in (.) do set prevdirname=%%~nx*
+for %%a in (*.mp4, *.avi, *.wmv, *.mov, *.m4v) do (
+    set file=%%a
+    set name=%%~na
+    if !createcopy!==1 ( cd .. & if not exist "!foldername!!format!_!prevdirname!" ( mkdir "!foldername!!format!_!prevdirname!" )
+    cd "!cd!\!foldername!!format!_!prevdirname!"
+    set "inputdirectory=!prevdir!\!file!" & set "outputdirectory=!name!") else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
+    set "inputdirectory=!file!" & set "outputdirectory=!foldername!!format!\!name!" )
+    call :encodefile
+    echo.
+    cd !prevdir!
+)
+exit /b
+
     REM msgbox in Wscript. usage - call :msgbox "[message]"
 :msgbox
 echo msgbox "%~1" > !tempfiledir!\tmp.vbs
@@ -173,7 +213,7 @@ exit /b
 
     REM inputbox in wscript to ask for codec and fps.(could have maybe just used a function for ask and used it twice but hybrid has limitations) usage - call :askinfo
 :askinfo
-if !dontaskinputs!==1 ( set fps=!defaultfps! & set format=!defaultcodec!
+if !dontaskinputs!==1 ( set fps=!defaultfps!& set format=!defaultcodec!
 exit /b)
 :wscript.echo InputBox("What codec would you like to use? [xvid recommended]","Codec - prorecv1.5","")
 :wscript.echo InputBox("What fps would you like to use?","FPS - prorecv1.5","600")
@@ -215,25 +255,6 @@ del !tempfiledir!\tmp.vbs
 if !para1!==null ( call :msgbox "Cancelled")
 exit /b
 
-    REM used to create encoded folder and to create encoded files within same directory (basically gmzorz thing). usage - call :encodedirectory
-:encodedirectory
-set prevdir=!cd!
-for %%* in (.) do set prevdirname=%%~nx*
-for %%a in (*.mp4, *.avi, *.wmv, *.mov, *.m4v) do (
-    set file=%%a
-    set name=%%~na
-    if !createcopy!==1 ( cd .. & if not exist "!foldername!!format!_!prevdirname!" ( mkdir "!foldername!!format!_!prevdirname!" )
-    cd "!cd!\!foldername!!format!_!prevdirname!"
-    set "inputdirectory=!prevdir!\!file!" & set "outputdirectory=!name!") else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
-    set "inputdirectory=!file!" & set "outputdirectory=!foldername!!format!\!name!" )
-    echo Encoding "!inputdirectory!" with !format! to "!outputdirectory!"
-    :reloadconfig
-    echo !xvid!
-    !%format%!
-    echo.
-    cd !prevdir!
-)
-exit /b
 
     REM temp vbs script for selection lists (source:https://stackoverflow.com/questions/47100085/creating-multi-select-list-box-in-vbscript) Used for call :selectionlist ...
 
@@ -548,20 +569,5 @@ Class clsSmallWrapperForm 'VBS
  'VBS
 End Class 'VBS
 )
-
-
-       REM --------------------------FFMPEG CONFIGS--------------------------
-
-    REM apart from the h264 config, this is pretty much the same as gmzorz's prorec config but with less verbose output (may add more options in the future)
-:encodesettings
-set "xvid=ffmpeg -loglevel error -stats -r ^"!fps!^" -i ^"!inputdirectory!^" -c:v mpeg4 -vtag xvid -qscale:v 1 -qscale:a 1 -g 32 -vsync 1 -y ^"!outputdirectory!^".avi"
-    REM for fast editing during hcs or editing contests (slower playback speed+worse quality but really speedy encode time)
-set "prores=ffmpeg -loglevel error -stats  -r ^"!fps!^" -i ^"!inputdirectory!^" -c:v prores_ks -profile:v 3 -c:a pcm_s16le -y ^"!outputdirectory!^".mov"
-    REM general use codec for regular prerecs or cinematics (better playback speed+quality but 10x slower encode time)
-set "h264=ffmpeg -loglevel error -stats  -r ^"!fps!^" -i ^"!inputdirectory!^" -c:v libx264 -crf 4 -y ^"!outputdirectory!^".mp4"
-    REM good for creating prerecs but vegas incompatible (relatively small file size) im pretty sure you can vdub these
-exit /b
-
-    REM L used to set encode settings. usage - call :encodesettings & !%format%!
 
 rem best girl
