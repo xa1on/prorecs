@@ -1,16 +1,15 @@
 # prerecv
 
-Batch encoding videos with ffmpeg.
-prorecv is used mainly for encoding multiple folders worth of pre-recordings and cinematics at once.
+Batch encoding videos with ffmpeg. Prorecv can be used as an alternative to vdub and avifrate for editors and is capable of encoding multiple folders worth of pre-recordings and cinematics at once.
 
 ### Features
 
 * Automated encoding of multiple folders
 * Ffmpeg supported codec usage
-* Customizable config
-* Source fps change
-* Simple UI
-
+* Source framerate adjustment
+* Drag and drop support
+* Customizable configs
+* Simple Windows UI
 
 ## Requirements
 
@@ -19,7 +18,6 @@ prorecv is used mainly for encoding multiple folders worth of pre-recordings and
 * [Xvid](https://www.xvid.com/download/)
 * [quicktime](https://support.apple.com/kb/DL837)
 
-
 ## THIS IS WIP
-go to my fork on gmzorz prerec repo to see working v1
-[prerecs](https://github.com/xa1on/prerecs)
+go to my [fork](https://github.com/xa1on/prerecs) on [gmzorz prerec repo](https://github.com/gmzorz/prerecs) to see working v1.  
+(Note: This was all written from scratch, but all credit goes to [gmzorz](https://github.com/gmzorz) for the original idea/concept)
