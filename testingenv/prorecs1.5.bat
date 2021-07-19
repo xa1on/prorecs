@@ -1,7 +1,7 @@
 @echo off
           REM Comments
 
-    REM EXPERIMENTAL PREREC v1.5.1
+    REM EXPERIMENTAL PRORECS v1.5.1
 
     REM ffmpeg batch program for prores, xvid, and h264 encoding for entire prerec folders/indivdual rec files w/basic ui
     REM currently WIP
@@ -13,6 +13,7 @@
     REM or dm me on twitter @xalondzn
 
 
+          REM program env variables (change these to whatever you want) CONFIG FILES BYPASS THESE
 
        REM --------------------------FFMPEG SETTINGS--------------------------
 
@@ -25,8 +26,6 @@ set "h264=ffmpeg -loglevel error -stats  -r ^"-fps-^" -i ^"-inputdirectory-^" -c
     REM good for creating prerecs but vegas incompatible (relatively small file size) im pretty sure you can vdub these
 
 
-
-          REM program env variables (change these to whatever you want) CONFIG FILES BYPASS THESE
 
 set noUI=0
     REM L Fully automates things without any dialog, only relying on default values set. This bypasses dontconfirm, alwaysencodeall, and dontaskinputs when set to 1. (1=on 0=off) default - 0
@@ -67,7 +66,7 @@ call :reloadconfig
 pushd %~dp0
 echo.
 if %noUI%==1 ( set dontconfirm=1 & set alwaysencodeall=1 & set dontaskinputs=1)
-if %alwayscreatecopy%==0 call :confirm "Create copy of folder/files? (The folder will always have a duplicate encoded version in itself, but it will be in the parent directory rather than inside the folder. You can disable this popup by setting alwayscreatecopy = 1 in the batch file)" "Create Copy - prerecv1.5"
+if %alwayscreatecopy%==0 call :confirm "Create copy of folder/files? (The folder will always have a duplicate encoded version in itself, but it will be in the parent directory rather than inside the folder. You can disable this popup by setting alwayscreatecopy = 1 in the batch file)" "Create Copy - prorecs1.5"
 set createcopy=1
 if !responseconfirm!==0 ( set createcopy=0)
 if [%1]==[] (
@@ -92,7 +91,7 @@ goto empty
 
 :singlefileencode
 set responseconfirm=1
-if %dontconfirm%==0 call :confirm "Single file encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Single File - prerecv1.5"
+if %dontconfirm%==0 call :confirm "Single file encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Single File - prorecs1.5"
 if !responseconfirm!==0 ( exit)
 call :askinfo
 set file=%~n1%~x1
@@ -105,7 +104,7 @@ goto end
 :batchfolderencode:
 set startfolder=%cd%
 set responseconfirm=1
-if %dontconfirm%==0 call :confirm "Batch Folder encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Batch Folder - prerecv1.5"
+if %dontconfirm%==0 call :confirm "Batch Folder encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Batch Folder - prorecs1.5"
 if !responseconfirm!==0 ( call :msgbox "Make sure to move/remove all folders within the target folder if you only want to encode the target folder files." & exit)
 set allfolders = 
 for /f "delims=" %%D in ('dir /a:d /b') do (
@@ -141,7 +140,7 @@ goto checkexcludebatch
 
 :folderencode
 set responseconfirm=1
-if %dontconfirm%==0 call :confirm "Single directory encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Single Directory - prerecv1.5"
+if %dontconfirm%==0 call :confirm "Single directory encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Single Directory - prorecs1.5"
 if !responseconfirm!==0 ( exit)
 call :askinfo
 set filename=%cd%~1
@@ -203,6 +202,14 @@ for %%a in (*.mp4, *.avi, *.wmv, *.mov, *.m4v) do (
 )
 exit /b
 
+:encodedirectory
+for %%a in (*.mp4, *.avi, *.wmv, *.mov, *.m4v) do (
+    set file=%%a
+    set name=%%~na
+    set inputdirectory=!file! & set "outputdirectory=!output!"
+)
+exit /b
+
     REM msgbox in Wscript. usage - call :msgbox "[message]"
 :msgbox
 echo msgbox "%~1" > !tempfiledir!\tmp.vbs
@@ -214,8 +221,8 @@ exit /b
 :askinfo
 if !dontaskinputs!==1 ( set fps=!defaultfps!& set format=!defaultcodec!
 exit /b)
-:wscript.echo InputBox("What codec would you like to use? [xvid recommended]","Codec - prerecv1.5","")
-:wscript.echo InputBox("What fps would you like to use?","FPS - prerecv1.5","600")
+:wscript.echo InputBox("What codec would you like to use? [xvid recommended]","Codec - prorecs1.5","")
+:wscript.echo InputBox("What fps would you like to use?","FPS - prorecs1.5","600")
 findstr "^:wscript" "%~sf0">!tempfiledir!\tmp.vbs
 set i=0 & for /f "delims=" %%n in ('cscript //nologo !tempfiledir!\tmp.vbs') do ( set /a i+=1 & set param!i!=%%n)
 set format=%param1%& set fps=%param2%
@@ -278,7 +285,7 @@ Next 'VBS
 With New clsSmallWrapperForm 'VBS
     ' Setup window 'VBS
     .ShowInTaskbar = "yes" 'VBS
-    .Title = "Select Folders/Files to Exclude - prerecv1.5" 'VBS
+    .Title = "Select Folders/Files to Exclude - prorecs1.5" 'VBS
     .BackgroundImage = BGI 'VBS
     .Width = 354 'VBS
     .Height = 118 'VBS
