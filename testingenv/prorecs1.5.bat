@@ -30,8 +30,6 @@ set "h264=ffmpeg -loglevel error -stats  -r ^"-fps-^" -i ^"-inputdirectory-^" -c
 set noUI=0
     REM L Fully automates things without any dialog, only relying on default values set. This bypasses dontconfirm, alwaysencodeall, and dontaskinputs when set to 1. (1=on 0=off) default - 0
 
-set foldername=e_
-    REM L set this to whatever you want as the prefix for the created folder/file. default - "encoded_" 
 set alwayscreatecopy=1
     REM L always creates encoded copy of the files/folders rather than creating a folder within selected folders for encoded files. basically 0 for old prerec folder being created or 1 for copy of folder/file (1=on 0=off) default - 1
 set dontconfirm=0
@@ -42,6 +40,11 @@ set dontaskinputs=0
     REM L Asking for fps and codec toggle. (1=on, 0=off) default - 0
 
 
+set foldername=e_
+    REM L set this to whatever you want as the prefix for the created folder/file. default - "e_" 
+set tempfiledir=%tmp%
+    REM L this is where the program puts the temp vbs files. Don't edit this if the program works as intended with its default value "%tmp%\"
+
 
     REM DEFAULT FPS AND DEFAULT CODEC IS EXCLUSIVELY FOR WHEN noUI OR dontaskinputs ARE SET TO 1
        REM In order to switch default codec and fps when dontaskinputs is off, go to line #placeholder and change the third parameter in the code for either option
@@ -49,8 +52,6 @@ set defaultfps=600
 set defaultcodec=xvid
     REM L self explainitory, read above comment. defaults fps-600, codec-xvid
 
-set tempfiledir="%tmp%"
-    REM L this is where the program puts the temp vbs files. Don't edit this if the program works as intended with its default value "%tmp%\"
        
 
           REM vvvv code(please dont mess with this if you have no idea what you're doing) vvvv
@@ -81,11 +82,11 @@ if [%1]==[] (
     )
 )
 for /f "delims=" %%D in ('dir /a:d /b') do ( goto batchfolderencode)
-if exist *.mp4 (goto folderencode )
-if exist *.avi (goto folderencode )
-if exist *.wmv (goto folderencode )
-if exist *.mov (goto folderencode )
-if exist *.m4v (goto folderencode )
+if exist *.mp4 ( goto folderencode)
+if exist *.avi ( goto folderencode)
+if exist *.wmv ( goto folderencode)
+if exist *.mov ( goto folderencode)
+if exist *.m4v ( goto folderencode)
 goto empty
 
 
@@ -96,8 +97,8 @@ if !responseconfirm!==0 ( exit)
 call :askinfo
 set file=%~n1%~x1
 set name=%~n1
-if !createcopy!==1 ( set inputdirectory=!file! & set "outputdirectory=!foldername!!format!_!name!") else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
-set inputdirectory=!file! & set "outputdirectory=!foldername!!format!\!name!" )
+if !createcopy!==1 ( set inputdirectory=!file!& set "outputdirectory=!foldername!!format!_!name!") else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
+set inputdirectory=!file!& set "outputdirectory=!foldername!!format!\!name!")
 call :encodefile
 goto end
 
@@ -106,7 +107,10 @@ set startfolder=%cd%
 set responseconfirm=1
 if %dontconfirm%==0 call :confirm "Batch Folder encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Batch Folder - prorecs1.5"
 if !responseconfirm!==0 ( call :msgbox "Make sure to move/remove all folders within the target folder if you only want to encode the target folder files." & exit)
-set allfolders = 
+set allfolders=
+call :askinfo
+if !createcopy!==1 ( for %%* in (.) do set prevdirname=%%~nx*& pushd ..& if not exist "!foldername!!format!_!prevdirname!" ( mkdir "!foldername!!format!_!prevdirname!")
+set "output=!cd!\!foldername!!format!_!prevdirname!" & popd )
 for /f "delims=" %%D in ('dir /a:d /b') do (
     set "allfolders=!allfolders! ^"%%~nxD^""
     set /a i+=1
@@ -124,14 +128,27 @@ if !i!==100 exit
 goto checkexcludebatch
 :finishexludebatch
 pushd !startfolder!\!currentfolder%j%!
-if [!fps!]==[] call :askinfo
 set "folderprefix=!foldername!!format!"
 set /a prefixlength=0
 :prefixcalcbatch
 if not "!folderprefix:~%prefixlength%,1!"=="" ( set /a prefixlength+=1 & goto prefixcalcbatch)
 :endprefixcalcbatch
 if "!currentfolder%j%:~0,%prefixlength%!"=="!folderprefix!" ( goto endexludebatchinstance)
+if exist *.mp4 ( goto startbatch)
+if exist *.avi ( goto startbatch)
+if exist *.wmv ( goto startbatch)
+if exist *.mov ( goto startbatch)
+if exist *.m4v ( goto startbatch)
+goto endexludebatchinstance
+
+:startbatch
+if !createcopy!==0 ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
+set "output=!cd!\!foldername!!format!")
+if !createcopy!==1 ( for %%* in (.) do set prevnewdirname=%%~nx*& pushd .. & pushd .. & pushd !cd!\!foldername!!format!_!prevdirname! & if not exist "!prevnewdirname!" ( mkdir "!prevnewdirname!")
+set "output=!cd!\!prevnewdirname!"& popd & popd & popd )
+
 call :encodedirectory
+
 cd !startfolder!
 :endexludebatchinstance
 set /a j+=1 & set /a i=0
@@ -143,7 +160,11 @@ set responseconfirm=1
 if %dontconfirm%==0 call :confirm "Single directory encode? Open batch file in notepad for more info. (You can disable this popup by changing dontconfirm to 1 in the batch file)" "Single Directory - prorecs1.5"
 if !responseconfirm!==0 ( exit)
 call :askinfo
-set filename=%cd%~1
+for %%* in (.) do set prevdirname=%%~nx*
+if !createcopy!==0 ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!") & set "output=!cd!\!foldername!!format!")
+if !createcopy!==1 ( pushd .. & if not exist "!foldername!!format!_!prevdirname!" ( mkdir "!foldername!!format!_!prevdirname!")
+set "output=!cd!\!foldername!!format!_!prevdirname!" & popd )
+
 call :encodedirectory
 goto end
 
@@ -155,9 +176,6 @@ exit
 echo. & echo Finished
 call :msgbox "Finished"
 exit
-
-
-
 
 
 
@@ -187,26 +205,12 @@ exit /b
 
     REM used to create encoded folder and to create encoded files within same directory (basically gmzorz thing). usage - call :encodedirectory
 :encodedirectory
-set prevdir=!cd!
-for %%* in (.) do set prevdirname=%%~nx*
 for %%a in (*.mp4, *.avi, *.wmv, *.mov, *.m4v) do (
     set file=%%a
     set name=%%~na
-    if !createcopy!==1 ( cd .. & if not exist "!foldername!!format!_!prevdirname!" ( mkdir "!foldername!!format!_!prevdirname!" )
-    cd "!cd!\!foldername!!format!_!prevdirname!"
-    set "inputdirectory=!prevdir!\!file!" & set "outputdirectory=!name!") else ( if not exist "!foldername!!format!" ( mkdir "!foldername!!format!")
-    set "inputdirectory=!file!" & set "outputdirectory=!foldername!!format!\!name!" )
+    set inputdirectory=!file!& set "outputdirectory=!output!\!name!"
     call :encodefile
     echo.
-    cd !prevdir!
-)
-exit /b
-
-:encodedirectory
-for %%a in (*.mp4, *.avi, *.wmv, *.mov, *.m4v) do (
-    set file=%%a
-    set name=%%~na
-    set inputdirectory=!file! & set "outputdirectory=!output!"
 )
 exit /b
 
@@ -219,6 +223,7 @@ exit /b
 
     REM inputbox in wscript to ask for codec and fps.(could have maybe just used a function for ask and used it twice but hybrid has limitations) usage - call :askinfo
 :askinfo
+
 if !dontaskinputs!==1 ( set fps=!defaultfps!& set format=!defaultcodec!
 exit /b)
 :wscript.echo InputBox("What codec would you like to use? [xvid recommended]","Codec - prorecs1.5","")
@@ -246,7 +251,7 @@ exit /b
 
     REM selection list for selecting items using wscript and a handful of other stuff. usage - call :selectionlist "[option1] [option2] [option3] ..."
 :selectionlist
-if !alwaysencodeall!==1 ( set para1="ENCODE ALL" 
+if !alwaysencodeall!==1( set para1="ENCODE ALL" 
 exit /b)
 set allselectargs =
 :checkselectionargs
