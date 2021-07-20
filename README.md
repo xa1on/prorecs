@@ -1,6 +1,6 @@
 # prorecs
 
-Batch encoding videos with ffmpeg. Prorecs can be used as an alternative to vdub and avifrate for editors and is capable of encoding multiple folders worth of pre-recordings and cinematics at once.
+Batch encoding videos with ffmpeg. Prorecs can be used as an alternative to vdub and avifrate for editors. Capable of encoding multiple folders worth of videos at once.
 
 ### Features
 
