@@ -66,8 +66,8 @@ goto init
 call :reloadconfig
 pushd %~dp0
 echo.
-if %noUI%==1 ( set dontconfirm=1 & set alwaysencodeall=1 & set dontaskinputs=1)
-if %alwayscreatecopy%==0 call :confirm "Create copy of folder/files? (The folder will always have a duplicate encoded version in itself, but it will be in the parent directory rather than inside the folder. You can disable this popup by setting alwayscreatecopy = 1 in the batch file)" "Create Copy - prorecs1.5"
+if !noUI!==1 ( set dontconfirm=1 & set alwaysencodeall=1 & set dontaskinputs=1)
+if !alwayscreatecopy!==0 call :confirm "Create copy of folder/files? (The folder will always have a duplicate encoded version in itself, but it will be in the parent directory rather than inside the folder. You can disable this popup by setting alwayscreatecopy = 1 in the batch file)" "Create Copy - prorecs1.5"
 set createcopy=1
 if !responseconfirm!==0 ( set createcopy=0)
 if [%1]==[] (
@@ -111,17 +111,19 @@ set allfolders=
 call :askinfo
 if !createcopy!==1 ( for %%* in (.) do set prevdirname=%%~nx*& pushd ..& if not exist "!foldername!!format!_!prevdirname!" ( mkdir "!foldername!!format!_!prevdirname!")
 set "output=!cd!\!foldername!!format!_!prevdirname!" & popd )
+set i=0
 for /f "delims=" %%D in ('dir /a:d /b') do (
     set "allfolders=!allfolders! ^"%%~nxD^""
     set /a i+=1
-    set currentfolder!i!=%%~nxD
+    set "currentfolder!i!=%%~nxD"
 )
 call :selectionlist !allfolders!
 if !para1!==null ( exit)
-set /a i=0 & set /a j=1
+set /a i=0
+set /a j=1
 :checkexcludebatch
 set /a i+=1
-if "!para1!"=="ENCODE ALL" goto finishexludebatch
+if "!para1!"=="ENCODE ALL" ( goto finishexludebatch)
 if !para%i%!==!currentfolder%j%! goto endexludebatchinstance
 if [!para%i%!]==[] goto finishexludebatch
 if !i!==100 exit
@@ -151,7 +153,8 @@ call :encodedirectory
 
 cd !startfolder!
 :endexludebatchinstance
-set /a j+=1 & set /a i=0
+set /a j+=1
+set i=0
 if [!currentfolder%j%!]==[] goto end
 goto checkexcludebatch
 
@@ -224,14 +227,14 @@ exit /b
 
     REM inputbox in wscript to ask for codec and fps.(could have maybe just used a function for ask and used it twice but hybrid has limitations) usage - call :askinfo
 :askinfo
-
 if !dontaskinputs!==1 ( set fps=!defaultfps!& set format=!defaultcodec!
 exit /b)
 :wscript.echo InputBox("What codec would you like to use? [xvid recommended]","Codec - prorecs1.5","")
 :wscript.echo InputBox("What fps would you like to use?","FPS - prorecs1.5","600")
 findstr "^:wscript" "%~sf0">!tempfiledir!\tmp.vbs
 set i=0 & for /f "delims=" %%n in ('cscript //nologo !tempfiledir!\tmp.vbs') do ( set /a i+=1 & set param!i!=%%n)
-set format=%param1%& set fps=%param2%
+set format=!param1!
+set fps=!param2!
 del !tempfiledir!\tmp.vbs
 exit /b
 
@@ -252,8 +255,7 @@ exit /b
 
     REM selection list for selecting items using wscript and a handful of other stuff. usage - call :selectionlist "[option1] [option2] [option3] ..."
 :selectionlist
-if !alwaysencodeall!==1( set para1="ENCODE ALL" 
-exit /b)
+if !alwaysencodeall!==1 ( set "para1=ENCODE ALL" & exit /b)
 set allselectargs =
 :checkselectionargs
 if [%1]==[] goto endselectionargs
@@ -261,7 +263,7 @@ set "allselectargs=!allselectargs! %1"
 shift /1
 goto checkselectionargs
 :endselectionargs
-set /a i=0
+set i=0
 findstr /e "'VBS" "%~f0">!tempfiledir!\tmp.vbs & for /f "delims=" %%n in ('cscript //nologo !tempfiledir!\tmp.vbs "ENCODE ALL"!allselectargs!') do ( set /a i+=1 & set para!i!=%%n)
 del !tempfiledir!\tmp.vbs
 if !para1!==null ( call :msgbox "Cancelled")
