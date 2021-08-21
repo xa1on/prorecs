@@ -188,7 +188,8 @@ exit
 
 :reloadconfig
 pushd %~dp0
-if exist *.cfg ( for %%i in (*.cfg) do ( set "configfile=%%~nxi"& for /f "delims=" %%x in (!configfile!) do ( set currentline=%%x& call :processline) & echo Loaded !configfile! ) )
+if exist *.cfg ( for %%i in (*.cfg) do ( set "configfile=%%~nxi"& for /f "delims=" %%x in (!configfile!) do ( set currentline=%%x& call :processline) ) )
+if not [!configfile!]==[] ( echo Loaded !configfile!)
 popd
 exit /b
 
