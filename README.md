@@ -20,4 +20,6 @@ Batch encoding videos with ffmpeg. Prorecs can be used as an alternative to vdub
 
 ## THIS IS WIP
 go to my [fork](https://github.com/xa1on/prerecs) on [gmzorz prerec repo](https://github.com/gmzorz/prerecs) to see working v1.
-(Note: This repo was all written from scratch, but all credit goes to [gmzorz](https://github.com/gmzorz) for the original idea/concept)
+
+
+(Note: This current repo was all written from scratch, but all credit goes to [gmzorz](https://github.com/gmzorz) for the original idea/concept)
