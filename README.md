@@ -1,6 +1,6 @@
 # prorecs
 
-Batch encoding videos with ffmpeg. Prorecs can be used as an alternative to vdub and avifrate for editors. Capable of encoding multiple folders worth of videos at once.
+[prerecs](https://github.com/gmzorz/prerecs) but able to encode a multiple folders within any given folder using configs(so you dont have to retype the same thing over and over again)
 
 ### Features
 
@@ -18,8 +18,4 @@ Batch encoding videos with ffmpeg. Prorecs can be used as an alternative to vdub
 * [Xvid](https://www.xvid.com/download/)
 * [quicktime](https://support.apple.com/kb/DL837)
 
-## THIS IS WIP
-go to my [fork](https://github.com/xa1on/prerecs) on [gmzorz prerec repo](https://github.com/gmzorz/prerecs) to see working v1.
-
-
-(Note: This current repo was all written from scratch, but all credit goes to [gmzorz](https://github.com/gmzorz) for the original idea/concept)
+written from scratch, enjoy :D
