@@ -1,6 +1,6 @@
-# prorecs
+# prorecscfg
 
-[prerecs](https://github.com/gmzorz/prerecs) but able to encode a multiple folders within any given folder using configs(so you dont have to retype the same thing over and over again)
+[prerecs](https://github.com/gmzorz/prerecs), by [gmzorz](https://github.com/gmzorz), but able to encode a multiple folders within any given folder using configs(so you dont have to retype the same thing over and over again)
 
 ### Features
 
