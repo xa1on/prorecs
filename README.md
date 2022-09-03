@@ -9,7 +9,6 @@
 * Source framerate adjustment
 * Drag and drop support
 * Customizable configs
-* Windows prompt windows(sounds weird but im not sure what the correct term for it is)
 
 ## Requirements
 
