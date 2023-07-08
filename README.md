@@ -1,13 +1,13 @@
 # prorecscfg
 
-[prerecs](https://github.com/gmzorz/prerecs), but able to encode a multiple folders within any given folder using configs(so you dont have to retype the same thing over and over again)
+[prerecs](https://github.com/gmzorz/prerecs), but able to encode multiple folders using modifiable configs
 
 ### Features
 
-* Automated encoding of multiple folders
+* Automated encoding w/ multiple folders
 * Ffmpeg supported codec usage
 * Source framerate adjustment
-* Drag and drop support
+* Drag n drop support
 * Customizable configs
 
 ## Requirements
